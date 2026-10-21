@@ -104,7 +104,7 @@ run() {
     | grep -iE 'zlink|radio|fm|headunit|navi|music|carplay|auto|launcher|home|media|player|bt|bluetooth|mcu|can|avin|camera|dvr|setting|car' \
     || echo "(nenhum resultado)"
 
-  # Launcher atual. "cmd package resolve-activity" funciona no Android 7.0 AOSP (emulador), mas o firmware
+  # da central pode ser diferente, então tentamos vários métodos e mostramos tudo que funcionar.
   # então tentamos em ordem e mostramos tudo que funcionar.
   run "LAUNCHER: cmd package resolve-activity (ok no Android 7.0 AOSP)" \
     cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME
