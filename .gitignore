@@ -5,3 +5,9 @@ build/
 .idea/
 local.properties
 *.apk
+keystore.properties
+*.jks
+*.keystore
+.kotlin/
+captures/
+/branding/
