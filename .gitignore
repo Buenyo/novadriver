@@ -1,0 +1,7 @@
+docs/device-info.txt
+.gradle/
+build/
+*.iml
+.idea/
+local.properties
+*.apk
