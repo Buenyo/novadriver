@@ -118,6 +118,16 @@ run() {
   run "LAUNCHER: pilha HOME (dumpsys activity recents/stack)" \
     'dumpsys activity activities | grep -m 10 -E "Stack #0|realActivity|mActivityType|HOME"'
 
+  # Por que o ZLink abre sozinho ao conectar o USB: quem declara os eventos de USB
+  # e se há preferência "usar por padrão" salva no serviço de USB.
+  run "USB: apps que respondem a USB_DEVICE/ACCESSORY_ATTACHED" \
+    'dumpsys package r | grep -A 8 -E "android.hardware.usb.action.USB_(DEVICE|ACCESSORY)_ATTACHED:"'
+  run "USB: dumpsys usb (modo, host, preferências)" 'dumpsys usb | head -80'
+  run "USB: pacotes zlink (detalhes)" \
+    'for p in $(pm list packages | sed "s/^package://" | grep -i zlink); do echo "--- $p"; dumpsys package $p | grep -E "codePath=|versionName=|enabled=|pkgFlags=|android.hardware.usb|BOOT_COMPLETED|Service" | head -30; done'
+  run "BOOT: apps que iniciam no boot (BOOT_COMPLETED)" \
+    'dumpsys package r | grep -A 40 "android.intent.action.BOOT_COMPLETED:" | head -50'
+
   run "SERVIÇOS: listeners de notificação habilitados" settings get secure enabled_notification_listeners
   run "SERVIÇOS: sessões de mídia ativas" 'dumpsys media_session | head -60'
   run "REDE: Wi-Fi (IP para ADB sem fio)" 'ip -f inet addr show wlan0 2>/dev/null || ifconfig wlan0'
