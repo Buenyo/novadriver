@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Valores genéricos. A pasta branding/ (fora do git) sobrepõe estes recursos. -->
+<resources>
+    <bool name="branding_present">false</bool>
+    <string name="brand_logo_description">NovaDrive</string>
+</resources>
