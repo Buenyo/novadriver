@@ -102,6 +102,10 @@ class MainActivity : ComponentActivity(), LauncherActions {
         container.launcher.openSystemSettings(this)
     }
 
+    override fun openAccessibilitySettings() {
+        container.launcher.openAccessibilitySettings(this)
+    }
+
     override fun openUnknownSources() {
         container.launcher.openUnknownSources(this)
     }

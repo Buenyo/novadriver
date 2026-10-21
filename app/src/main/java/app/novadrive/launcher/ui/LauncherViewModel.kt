@@ -27,6 +27,7 @@ sealed interface Screen {
     data object Settings : Screen
     data object NotificationAccess : Screen
     data object HeadunitHelp : Screen
+    data object MediaDiagnostics : Screen
     data class Picker(val target: PickTarget) : Screen
 }
 
@@ -84,6 +85,7 @@ class LauncherViewModel(val c: AppContainer) : ViewModel() {
         _screen.value = when (val s = _screen.value) {
             is Screen.Picker -> if (s.target is PickTarget.Headunit && _fromHeadunitHelp) Screen.HeadunitHelp else Screen.Settings
             Screen.HeadunitHelp -> if (_fromSettings) Screen.Settings else Screen.Home
+            Screen.MediaDiagnostics -> Screen.Settings
             else -> Screen.Home
         }
         _query.value = ""

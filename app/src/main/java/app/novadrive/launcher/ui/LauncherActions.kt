@@ -10,6 +10,7 @@ interface LauncherActions {
     fun openNotificationAccess()
     fun openHomeSettings()
     fun openSystemSettings()
+    fun openAccessibilitySettings()
     fun openUnknownSources()
     fun openUrl(url: String)
     fun openOtherHome(app: AppEntry)

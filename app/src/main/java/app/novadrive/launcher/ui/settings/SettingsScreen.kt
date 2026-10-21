@@ -48,6 +48,7 @@ import app.novadrive.launcher.settings.Settings
 import app.novadrive.launcher.settings.ThemeMode
 import app.novadrive.launcher.settings.WallpaperChoice
 import app.novadrive.launcher.system.Diagnostics
+import app.novadrive.launcher.system.HomeWatcher
 import app.novadrive.launcher.ui.CitySearch
 import app.novadrive.launcher.ui.LauncherActions
 import app.novadrive.launcher.ui.LauncherViewModel
@@ -109,6 +110,30 @@ fun SettingsScreen(vm: LauncherViewModel, actions: LauncherActions, s: Settings)
                 )
                 Row_("Como instalar e configurar", "Open Headunit no lugar do ZLink", onClick = { vm.openHeadunitHelp(fromSettings = true) })
             }
+            section("Tela inicial do fabricante") {
+                val watcherOn by HomeWatcher.connected.collectAsStateWithLifecycle()
+                val ctx = LocalContext.current
+                val inSystem = remember(watcherOn) { HomeWatcher.isEnabledInSystem(ctx) }
+                Toggle(
+                    "Substituir tela inicial do fabricante",
+                    "Se o botão HOME abrir o launcher da central, o NovaDrive volta para a frente. Também abre o NovaDrive ao ligar a central.",
+                    s.replaceOemHome,
+                    repo::setReplaceOemHome,
+                )
+                Row_(
+                    "Serviço de acessibilidade",
+                    when {
+                        watcherOn -> "Ativo"
+                        inSystem -> "Ligado no Android, aguardando o serviço iniciar"
+                        else -> "Desligado — toque e ative \"NovaDrive — vigia da tela inicial\""
+                    },
+                    onClick = actions::openAccessibilitySettings,
+                )
+                Info(
+                    "Launcher do fabricante detectado",
+                    homes.joinToString { it.packageName }.ifEmpty { "Nenhum (só o NovaDrive responde ao HOME)" },
+                )
+            }
             section("Clima") {
                 Toggle("Mostrar clima", "Open-Meteo, sem conta. Envia só a posição aproximada (~1 km).", s.weatherEnabled, repo::setWeatherEnabled)
                 if (s.weatherEnabled) {
@@ -135,7 +160,10 @@ fun SettingsScreen(vm: LauncherViewModel, actions: LauncherActions, s: Settings)
                 }
                 Row_("Configurações do Android", "Wi-Fi, Bluetooth, data e hora", onClick = actions::openSystemSettings)
             }
-            section("Diagnóstico") { DiagnosticsBlock() }
+            section("Diagnóstico") {
+                Row_("Diagnóstico de mídia", "Sessões de mídia ativas e o que cada app está enviando", onClick = { vm.open(Screen.MediaDiagnostics) })
+                DiagnosticsBlock()
+            }
         }
     }
 }
@@ -166,6 +194,15 @@ private fun Row_(title: String, value: String, onClick: () -> Unit) {
             .padding(horizontal = 8.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.Center,
     ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Só leitura (sem toque). */
+@Composable
+private fun Info(title: String, value: String) {
+    Column(Modifier.fillMaxWidth().defaultMinSize(minHeight = TouchMin).padding(horizontal = 8.dp, vertical = 10.dp), verticalArrangement = Arrangement.Center) {
         Text(title, style = MaterialTheme.typography.titleMedium)
         Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }

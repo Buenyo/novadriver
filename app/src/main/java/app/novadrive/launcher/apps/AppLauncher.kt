@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import app.novadrive.launcher.system.Diagnostics
+import app.novadrive.launcher.system.HomeWatcher
 
 /** Abre apps e telas do sistema com tratamento de erro (firmwares de central removem telas). */
 class AppLauncher(private val context: Context) {
@@ -44,14 +45,18 @@ class AppLauncher(private val context: Context) {
     fun openSystemSettings(activity: Activity): Boolean =
         tryStart(activity, Intent(Settings.ACTION_SETTINGS)).also { if (!it) toast("Configurações indisponíveis") }
 
+    fun openAccessibilitySettings(activity: Activity): Boolean =
+        tryStart(activity, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) || openSystemSettings(activity)
+
     fun openUnknownSources(activity: Activity): Boolean =
         tryStart(activity, Intent(Settings.ACTION_SECURITY_SETTINGS)) || openSystemSettings(activity)
 
     fun openUrl(activity: Activity, url: String): Boolean =
         tryStart(activity, Intent(Intent.ACTION_VIEW, Uri.parse(url))).also { if (!it) toast("Nenhum navegador instalado") }
 
-    /** Abre o launcher original explicitamente, sem mudar o padrão. */
+    /** Abre o launcher original explicitamente, sem mudar o padrão (o vigia não o devolve). */
     fun openHome(activity: Activity, component: ComponentName): Boolean {
+        HomeWatcher.allow(component.packageName)
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setComponent(component)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return start(activity, intent, false, "Não foi possível abrir o launcher")

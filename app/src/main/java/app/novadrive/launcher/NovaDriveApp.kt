@@ -63,6 +63,7 @@ class AppContainer(app: Application) {
 
     fun trimMemory() {
         apps.trimMemory()
+        media.trimMemory()
         wallpaper.clear()
     }
 }

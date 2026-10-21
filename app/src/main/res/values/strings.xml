@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">NovaDrive</string>
     <string name="notification_listener_label">NovaDrive — controles de mídia</string>
+    <string name="home_watcher_label">NovaDrive — vigia da tela inicial</string>
+    <string name="home_watcher_description">Quando o botão HOME abre o launcher do fabricante, o NovaDrive volta para a frente. Lê só o nome do app que abriu, nunca o conteúdo da tela. Desligue aqui ou em Configurações do NovaDrive para voltar ao launcher original.</string>
 </resources>

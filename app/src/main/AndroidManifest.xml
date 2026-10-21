@@ -9,6 +9,8 @@
          FINE é necessária para ler o GPS da central (muitas não têm provedor de rede). -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Abrir o NovaDrive ao ligar a central (desligável em Configurações). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Central não tem tela de toque obrigatória nem GPS garantido: não restringir instalação. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -78,5 +80,30 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!-- Vigia da tela inicial: o botão HOME desta central abre o launcher do fabricante mesmo
+             com o NovaDrive como padrão. Só recebe mudanças de janela; não lê o conteúdo. -->
+        <service
+            android:name=".system.HomeWatcherService"
+            android:exported="true"
+            android:label="@string/home_watcher_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/home_watcher_config" />
+        </service>
+
+        <!-- QUICKBOOT_POWERON não é protegida: qualquer app pode enviá-la, mas o efeito é só abrir a HOME. -->
+        <receiver
+            android:name=".system.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

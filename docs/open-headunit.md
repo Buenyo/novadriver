@@ -95,8 +95,43 @@ vídeo por hardware dele lida bem com H.264 até 1080p, mas não com H.265.
 | Modo noturno | "Automatic (System)" ou sinal de farol (ILL+) se a central expuser | [FATO] as duas opções existem |
 | GPS do carro | Ligado (entrega a posição da central ao celular) | [FATO] "Car GPS: deliver the head unit's fix" |
 | Áudio | Se cortar ou picotar: "Static Audio Focus" e aumentar o buffer de áudio | [FATO] as opções existem |
+| Música na HOME do NovaDrive | Áudio → **"Faixa atual do AA na sessão de mídia"** ligado | [FATO] código v3.5: vem **desligado**; desligado, a sessão mostra só "Android Auto" / "Conectado" |
 
-## 5. Ordem de teste no carro
+## 5. Android Auto sem fio (Bluetooth + Wi-Fi)
+
+O Android Auto sem fio não usa só Bluetooth: o Bluetooth faz o "aperto de mão" e o vídeo/áudio vão
+por **Wi-Fi**. Fontes: README e código do Open Headunit v3.5.
+
+- **[FATO, código]** O **Modo Nativo** abre um canal RFCOMM no `BluetoothAdapter` **do Android** (UUID
+  do Android Auto e HFP) e depois conecta por **Wi-Fi Direct** ou pelo **hotspot da central**.
+- **[SUPOSIÇÃO]** Muitas centrais T3 usam um **módulo Bluetooth separado**, controlado pelo app de
+  telefone do fabricante. Nesse caso o Android não "vê" o celular pareado e o Modo Nativo não funciona.
+  O README do Open Headunit só documenta um caminho para módulo externo em centrais **FYT**
+  (`/dev/auto_serial`), não para esta.
+- **Para saber qual é o caso:** rode `scripts/discover.sh` e veja as seções `BLUETOOTH:` e `WI-FI:`.
+  - `dumpsys bluetooth_manager` com `enabled: true`, endereço e o celular entre os pareados = o
+    Android enxerga o Bluetooth, então o Modo Nativo pode funcionar.
+  - Vazio, desligado ou sem o celular, mesmo pareado pelo app do fabricante = módulo separado, então
+    use o dongle.
+  - Sem `android.hardware.wifi.direct` em `pm list features`: tente o transporte **Headunit Hotspot**.
+
+| Opção | Precisa | Base |
+|---|---|---|
+| **Dongle USB de Android Auto sem fio** | Só o dongle no USB; o Open Headunit continua no modo USB | [FATO] README: "Most Reliable", independe da versão do Android Auto |
+| Modo Nativo | Bluetooth do Android + Wi-Fi Direct ou hotspot | [FATO] Configurações → Android Auto Mode → Native Mode |
+| Headunit Server | Modo desenvolvedor do Android Auto no celular, mesma rede Wi-Fi | [FATO] README, opção sem root |
+| Wireless Helper | Android Auto até 17.3 (17.4+ só com root) | [FATO] README |
+
+**Recomendação [SUPOSIÇÃO]:** se o `discover.sh` mostrar módulo separado, o dongle é o único caminho
+sem fio confiável. O Wi-Fi do T3 provavelmente é só 2,4 GHz, então mesmo o Modo Nativo pode travar o
+vídeo. Confira na seção `WI-FI:`. O NovaDrive não muda nada nisso: ele só abre o Open Headunit, e o
+cartão "Tocando agora" funciona igual por USB ou sem fio.
+
+**Música por Bluetooth sem Android Auto:** o cartão mostra qualquer sessão de mídia.
+**[SUPOSIÇÃO]** O app de Bluetooth do fabricante pode não publicar uma sessão. Para conferir: toque
+música pelo Bluetooth e abra Configurações → Diagnóstico de mídia.
+
+## 6. Ordem de teste no carro
 
 1. Celular com Android Auto atualizado, cabo USB de dados bom (curto).
 2. Abrir o Open Headunit pelo botão Android Auto do NovaDrive e rodar o assistente.
@@ -104,7 +139,7 @@ vídeo por hardware dele lida bem com H.264 até 1080p, mas não com H.265.
 4. Navegar 10 min com Maps/Waze + música: anotar travadas, atraso de toque, áudio.
 5. Ajustar um item da tabela por vez.
 
-## 6. Fora do escopo
+## 7. Fora do escopo
 
 O NovaDrive só **abre** o Open Headunit. O protocolo Android Auto, o vídeo e o áudio são todos dele.
 CarPlay não é suportado.

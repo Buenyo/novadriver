@@ -21,6 +21,7 @@ import app.novadrive.launcher.ui.drawer.AppDrawerScreen
 import app.novadrive.launcher.ui.home.HomeScreen
 import app.novadrive.launcher.ui.onboarding.HeadunitHelpScreen
 import app.novadrive.launcher.ui.onboarding.NotificationAccessScreen
+import app.novadrive.launcher.ui.settings.MediaDiagnosticsScreen
 import app.novadrive.launcher.ui.settings.SettingsScreen
 import app.novadrive.launcher.ui.theme.DarkColors
 import app.novadrive.launcher.ui.theme.LocalOnWallpaper
@@ -94,6 +95,7 @@ private fun Secondary(scr: Screen, vm: LauncherViewModel, actions: LauncherActio
         Screen.Home -> Unit
         Screen.Apps -> AppDrawerScreen(vm, onBack = vm::back, onOpen = actions::launch, onLongPress = actions::openAppInfo)
         Screen.Settings -> SettingsScreen(vm, actions, s)
+        Screen.MediaDiagnostics -> MediaDiagnosticsScreen(vm)
         Screen.NotificationAccess -> NotificationAccessScreen(ctx.packageName, vm::back, actions::openNotificationAccess)
         Screen.HeadunitHelp -> {
             val detected by vm.headunit.collectAsStateWithLifecycle()

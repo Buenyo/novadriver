@@ -41,6 +41,32 @@ scripts/perf.sh                  # mede abertura a frio e RAM
 
 Para definir como launcher padrão: aperte **HOME** na central → escolha **NovaDrive** → **Sempre**.
 
+## Botão HOME abrindo o launcher do fabricante
+
+Nesta central o botão HOME pode abrir o launcher do fabricante (app "Launcher" 1.1.1.5, de sistema)
+mesmo com "App de início = NovaDrive". Para isso existe o **Vigia da tela inicial**, um serviço de
+acessibilidade:
+
+1. NovaDrive → Configurações → *Tela inicial do fabricante* → toque em **Serviço de acessibilidade**.
+2. Na tela do Android, ative **NovaDrive — vigia da tela inicial** e confirme.
+   Se o firmware esconder essa tela: `scripts/home-watcher.sh on`.
+3. Volte ao NovaDrive: o item deve mostrar **Ativo**. Aperte HOME para testar.
+
+Como funciona:
+
+- O vigia recebe só o evento "janela mudou" e lê só o **nome do pacote** dela. Não lê o conteúdo da tela.
+- O launcher do fabricante é detectado na hora, sem nome fixo no código: é qualquer app com
+  `MAIN` + `HOME` que não seja o NovaDrive, ignorando as telas de emergência do sistema (prioridade
+  negativa). O pacote detectado aparece em Configurações, para conferência.
+- Quando esse pacote vem para a frente, o NovaDrive é reaberto. Há um intervalo mínimo de 500 ms
+  entre reaberturas, para não entrar em loop.
+- Os botões **Abrir \<launcher original\>** do NovaDrive continuam funcionando. O vigia deixa o
+  launcher aberto até você sair dele.
+- Ao ligar a central (`BOOT_COMPLETED` ou `QUICKBOOT_POWERON`), o NovaDrive também é aberto.
+- Com o NovaDrive em modo de segurança, o vigia não faz nada.
+- A chave **Substituir tela inicial do fabricante** desliga o vigia e a abertura no boot. Ela vem
+  ligada; o vigia em si só funciona depois que você o ativa no Android.
+
 ## Caminho de volta (OBRIGATÓRIO)
 
 Antes de tudo, rode `scripts/discover.sh` e **anote o pacote do launcher original** (seção `LAUNCHER`
@@ -68,6 +94,19 @@ de `docs/device-info.txt`). Há várias formas de voltar, da mais simples para a
 Se a central só tiver o NovaDrive e o original como telas iniciais, as opções 4 e 5 fazem o Android
 voltar sozinho ao original.
 
+**Desligar o vigia da tela inicial** (faça isso antes das opções 3 a 6, senão o HOME continua
+voltando ao NovaDrive):
+
+- NovaDrive → Configurações → desligue **Substituir tela inicial do fabricante**; ou
+- Android → Acessibilidade → **NovaDrive — vigia da tela inicial** → desligar; ou
+- `scripts/home-watcher.sh off` (preserva outros serviços de acessibilidade).
+
+Desinstalar ou desativar o NovaDrive (opções 4 e 6) também desliga o vigia.
+
+**Desligar o "Tocando agora" do Android Auto:** no Open Headunit, desligue "Faixa atual do AA na
+sessão de mídia". Para tirar o acesso do NovaDrive às notificações: Android → Acesso a notificações →
+NovaDrive → desligar.
+
 ## Android Auto (Open Headunit) e ZLink
 
 Veja [docs/open-headunit.md](docs/open-headunit.md): instalação, configurações para o Allwinner T3 e
@@ -80,13 +119,35 @@ Necessário para o cartão "Tocando agora": é a única forma oficial de um laun
 mídia de outros apps. O app explica isso e abre a tela certa. Se o firmware esconder essa tela, use
 `scripts/grant-notifications.sh`, que adiciona o NovaDrive e preserva os outros apps já liberados.
 
+## Música do Android Auto no cartão "Tocando agora"
+
+O cartão lê o `MediaMetadata` das sessões de mídia (título, artista, capa), não o texto das
+notificações. Durante o Android Auto, a sessão é a do **Open Headunit**.
+
+- **[FATO, código do Open Headunit 3.5]** Com a opção de sincronizar desligada, que é o **padrão**, o
+  Open Headunit publica na sessão o título fixo "Android Auto" e o artista "Conectado". É isso que
+  aparece no cartão. Com ela ligada, ele publica título, artista, álbum, duração e capa do celular.
+- **Para ligar:** Open Headunit → Configurações → **Áudio** → **Faixa atual do AA na sessão de mídia**
+  (em inglês: *AA now playing on media session*; no código: *Sync Media Session AA Metadata*) →
+  ligar → salvar.
+- **Para conferir no carro:** NovaDrive → Configurações → *Diagnóstico* → **Diagnóstico de mídia**.
+  A tela lista as sessões ativas, com pacote, estado e título recebido, e marca a que está no cartão.
+- Escolha da sessão: a que está tocando. Se duas estiverem tocando, vale a mais recente, pela ordem
+  do sistema. O pacote do Open Headunit não é fixado no código.
+- Capa: `ALBUM_ART`, depois `ART`, depois `DISPLAY_ICON`. Sem capa, fica o ícone de nota. A capa é
+  reduzida para 256 px (160 px no modo performance) fora da thread principal e guardada em cache por
+  faixa (até 6 faixas).
+- Botões: `MediaController.transportControls`. **[FATO, código]** o Open Headunit repassa
+  play/pause/próxima/anterior ao celular como teclas de mídia. **[SUPOSIÇÃO]** o celular obedece.
+
 ## Performance (Cortex-A7 + 2 GB)
 
 | Item | Como |
 |---|---|
 | Abertura a frio < 1,5 s | Tema XML com fundo escuro (sem flash), Compose sem bibliotecas extras, baseline profiles das bibliotecas (`profileinstaller`), AOT opcional (`--aot`) |
 | RAM < 120 MB | Papel de parede decodificado uma vez, no tamanho exato da tela (cerca de 2,4 MB a 1024x600); capas com no máximo 256 px (160 px no modo performance); cache de ícones de 6 MB (LRU) |
-| Nada em segundo plano | Mídia, clima, relógio e rede só rodam com a HOME visível (`onStart`/`onStop`). Fora isso, só o NotificationListener, que o sistema mantém |
+| Nada em segundo plano | Mídia, clima, relógio e rede só rodam com a HOME visível (`onStart`/`onStop`). Fora isso, só o NotificationListener e o vigia da tela inicial (se ativado), que o sistema mantém. O vigia só compara o nome do pacote de cada troca de janela |
+| Mídia sem desperdício | Metadados e estado são guardados a partir dos callbacks. Ler `getMetadata()` a cada mudança copiaria a capa inteira pelo Binder a cada segundo, pois o Open Headunit atualiza o estado nesse ritmo |
 | Animações baratas | Só fade de 160 a 260 ms. O **modo performance** (e "animações desligadas" do sistema) zera tudo e também tira a barra de progresso |
 | Sem blur nem sombras pesadas | Cartões com cor translúcida sólida; o blur não existe na API 24 |
 
@@ -97,8 +158,11 @@ mídia de outros apps. O app explica isso e abre a tela certa. Se o firmware esc
   (SHA-256 `96:BC:EC:06:…:08:C6`), junto das raízes do sistema.
 - O clima envia só a posição **arredondada para cerca de 1 km**; nada mais sai do aparelho. Sem contas,
   sem rastreamento.
-- `allowBackup=false`. Só a Activity HOME e o serviço protegido por `BIND_NOTIFICATION_LISTENER_SERVICE`
-  são exportados.
+- `allowBackup=false`. Componentes exportados: a Activity HOME, os serviços protegidos por
+  `BIND_NOTIFICATION_LISTENER_SERVICE` e `BIND_ACCESSIBILITY_SERVICE` (só o sistema pode ligá-los) e o
+  receptor de boot. `QUICKBOOT_POWERON` não é protegida, então outro app pode enviá-la. O único efeito
+  é abrir a HOME.
+- O serviço de acessibilidade não lê o conteúdo das janelas (`canRetrieveWindowContent=false`).
 - **Rede instável no carro:** cache de clima de 30 min; nova tentativa quando a rede volta (hotspot
   do celular); espera progressiva de 1 a 30 min; aviso quando a data/hora da central está errada
   (central sem bateria de RTC quebra o HTTPS).
@@ -114,9 +178,9 @@ app/src/main/java/app/novadrive/launcher/
   media/                NotificationListener + MediaSessionManager
   weather/              Open-Meteo, localização
   settings/             DataStore
-  system/               CrashGuard, relógio/rede, diagnóstico
+  system/               CrashGuard, relógio/rede, diagnóstico, vigia da tela inicial, boot
   ui/                   Compose: home, gaveta, configurações, onboarding, tema
-scripts/                discover, install, logs, perf, zlink, grant-notifications, make-keystore
+scripts/                discover, install, logs, perf, zlink, grant-notifications, home-watcher, make-keystore
 docs/                   adb-setup, open-headunit, device-info (gerado)
 ```
 

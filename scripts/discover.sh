@@ -131,6 +131,17 @@ run() {
   run "SERVIÇOS: listeners de notificação habilitados" settings get secure enabled_notification_listeners
   run "SERVIÇOS: sessões de mídia ativas" 'dumpsys media_session | head -60'
   run "REDE: Wi-Fi (IP para ADB sem fio)" 'ip -f inet addr show wlan0 2>/dev/null || ifconfig wlan0'
+  # Android Auto sem fio (Modo Nativo do Open Headunit) precisa do Bluetooth VISTO PELO ANDROID
+  # (RFCOMM) e de Wi-Fi Direct ou hotspot. Muitas centrais usam um módulo Bluetooth separado,
+  # controlado pelo app do fabricante: nesse caso o Android não enxerga o celular.
+  run "BLUETOOTH: recursos declarados (bluetooth, wifi.direct)" \
+    'pm list features | grep -iE "bluetooth|wifi"'
+  run "BLUETOOTH: serviço do Android (estado, endereço, pareados)" 'dumpsys bluetooth_manager | head -60'
+  run "BLUETOOTH: serviços com bt/bluetooth no nome (módulo do fabricante?)" 'service list | grep -iE "bluetooth|bt"'
+  run "BLUETOOTH: propriedades (módulo, chip)" 'getprop | grep -iE "bluetooth|\.bt\.|bt_|_bt"'
+  run "BLUETOOTH: apps de Bluetooth/telefone do fabricante" \
+    'pm list packages -f | grep -iE "bluetooth|\.bt|btphone|phone|dial"'
+  run "WI-FI: Wi-Fi Direct (P2P) e faixas" 'dumpsys wifip2p 2>/dev/null | head -30; dumpsys wifi | grep -m 10 -iE "5ghz|band|frequency|P2p|softap"'
   run "WEBVIEW / Play Services" 'pm list packages | grep -iE "webview|com.google.android.gms|com.android.vending"'
 } > "$OUT"
 

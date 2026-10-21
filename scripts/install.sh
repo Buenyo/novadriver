@@ -34,4 +34,6 @@ fi
 
 echo
 echo "OK. Para usar como tela inicial: aperte HOME na central e escolha NovaDrive > Sempre."
+echo "Se o HOME da central ainda abrir o launcher do fabricante: ative o vigia em"
+echo "  Acessibilidade > 'NovaDrive — vigia da tela inicial'  (ou: scripts/home-watcher.sh on)"
 echo "Para voltar ao launcher original, veja a seção 'Caminho de volta' no README."

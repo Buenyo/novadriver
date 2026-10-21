@@ -61,4 +61,6 @@ data class Settings(
     val locationMode: LocationMode = LocationMode.GPS,
     val city: CityLocation? = null,
     val notificationPromptShown: Boolean = false,
+    /** Vigia de acessibilidade + abertura no boot: tira o launcher do fabricante da frente. */
+    val replaceOemHome: Boolean = true,
 )

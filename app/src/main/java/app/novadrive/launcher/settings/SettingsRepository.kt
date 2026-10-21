@@ -36,6 +36,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
     fun setWeatherEnabled(v: Boolean) = edit { it[WEATHER] = v }
     fun setLocationMode(v: LocationMode) = edit { it[LOC_MODE] = v.name }
     fun setNotificationPromptShown() = edit { it[NOTIF_PROMPT] = true }
+    fun setReplaceOemHome(v: Boolean) = edit { it[REPLACE_OEM_HOME] = v }
 
     fun setShortcut(slot: ShortcutSlot, component: String?) = edit {
         val key = shortcutKey(slot)
@@ -73,6 +74,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
             locationMode = enumOr(p[LOC_MODE], d.locationMode),
             city = if (lat != null && lon != null && name != null) CityLocation(name, lat, lon) else null,
             notificationPromptShown = p[NOTIF_PROMPT] ?: false,
+            replaceOemHome = p[REPLACE_OEM_HOME] ?: d.replaceOemHome,
         )
     }
 
@@ -91,6 +93,7 @@ class SettingsRepository(context: Context, private val scope: CoroutineScope) {
         val CITY_LAT = doublePreferencesKey("city_lat")
         val CITY_LON = doublePreferencesKey("city_lon")
         val NOTIF_PROMPT = booleanPreferencesKey("notification_prompt_shown")
+        val REPLACE_OEM_HOME = booleanPreferencesKey("replace_oem_home")
 
         fun shortcutKey(slot: ShortcutSlot) = stringPreferencesKey("shortcut_${slot.name.lowercase()}")
     }
