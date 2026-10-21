@@ -84,12 +84,12 @@ fun NotificationAccessScreen(packageName: String, onBack: () -> Unit, onOpenSett
                     Spacer(Modifier.height(12.dp))
                     Text("Se a central não abrir essa tela", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Alguns firmwares escondem o menu. Pelo computador, com ADB conectado:",
+                        "Alguns firmwares escondem o menu. Pelo computador, com ADB conectado, rode na pasta do projeto:",
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Code("adb shell settings put secure enabled_notification_listeners \\\n  $packageName/app.novadrive.launcher.media.MediaListenerService")
+                    Code("scripts/grant-notifications.sh")
                     Text(
-                        "Atenção: esse comando substitui a lista atual. Veja o README para a versão que preserva os outros apps.",
+                        "O script adiciona o NovaDrive e mantém os outros apps que já tinham acesso ($packageName).",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -140,9 +140,9 @@ fun HeadunitHelpScreen(
                     Step(4, "Abra o Open Headunit uma vez e rode o assistente de otimização.")
                     Step(5, "Para o USB abrir o Open Headunit e não o ZLink, veja docs/open-headunit.md.")
                     Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         PillButton("Página de downloads", onOpenReleases, icon = R.drawable.ic_link)
-                        PillButton("Fontes desconhecidas", onUnknownSources)
+                        PillButton("Liberar fontes desconhecidas", onUnknownSources)
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(

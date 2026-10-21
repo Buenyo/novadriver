@@ -280,6 +280,12 @@ class MediaRepository(private val context: Context, private val scope: Coroutine
         }.getOrDefault(pkg)
     }
 
+    /** Só na build de debug (prints/manual): mostra uma música fictícia. O R8 remove do release. */
+    fun showDemo(now: NowPlaying) {
+        stop()
+        _state.value = MediaState.Active(now)
+    }
+
     // ---- Controles ----
 
     fun playPause() {

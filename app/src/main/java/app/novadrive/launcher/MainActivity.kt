@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity(), LauncherActions {
             setContentView(buildSafeMode())
             return
         }
+        if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_DEMO, false) == true) DemoData.apply(this, container)
         setContent {
             NovaDriveRoot(vm, this) {
                 Diagnostics.markFirstFrame()
@@ -55,7 +56,7 @@ class MainActivity : ComponentActivity(), LauncherActions {
 
     override fun onStart() {
         super.onStart()
-        if (!safeMode) container.onForeground()
+        if (!safeMode && !DemoData.active) container.onForeground()
     }
 
     override fun onResume() {
@@ -160,4 +161,9 @@ class MainActivity : ComponentActivity(), LauncherActions {
     }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    companion object {
+        /** adb shell am start -n <pkg>/app.novadrive.launcher.MainActivity --ez nd_demo true (só debug). */
+        const val EXTRA_DEMO = "nd_demo"
+    }
 }

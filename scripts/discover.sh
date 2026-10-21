@@ -104,11 +104,11 @@ run() {
     | grep -iE 'zlink|radio|fm|headunit|navi|music|carplay|auto|launcher|home|media|player|bt|bluetooth|mcu|can|avin|camera|dvr|setting|car' \
     || echo "(nenhum resultado)"
 
-  # Launcher atual. 'cmd package resolve-activity' pode não existir no Android 7,
+  # Launcher atual. "cmd package resolve-activity" funciona no Android 7.0 AOSP (emulador), mas o firmware
   # então tentamos em ordem e mostramos tudo que funcionar.
-  run "LAUNCHER: cmd package resolve-activity (pode falhar no Android 7)" \
+  run "LAUNCHER: cmd package resolve-activity (ok no Android 7.0 AOSP)" \
     cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME
-  run "LAUNCHER: cmd package query-activities HOME (pode falhar no Android 7)" \
+  run "LAUNCHER: cmd package query-activities HOME (ok no Android 7.0 AOSP)" \
     cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME
   run "LAUNCHER: preferências salvas (dumpsys package preferred-xml)" 'dumpsys package preferred-xml 2>/dev/null | head -60'
   run "LAUNCHER: activities com categoria HOME (dumpsys package r)" \

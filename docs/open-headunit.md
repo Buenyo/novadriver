@@ -15,6 +15,11 @@ Legenda: **[FATO]** = lido no repositório oficial (README/código, consultado e
 - O NovaDrive **não presume** o pacote: detecta pelo ID acima, por qualquer pacote/nome com
   "headunit", ou pelo app escolhido em Configurações → Android Auto.
 
+- **[FATO, emulador]** O APK v3.5.0 traz bibliotecas nativas para `armeabi-v7a` (32 bits, como o T3),
+  `arm64-v8a`, `x86` e `x86_64`. A activity de abertura é `com.andrerinas.openheadunit.main.MainActivity`.
+- **[FATO, emulador]** Na primeira abertura, o Open Headunit liga o **modo carro** do Android (ícone de
+  volante na barra de status). O NovaDrive continua sendo a HOME e declara `CAR_DOCK` por segurança.
+
 ## 2. Instalar
 
 ```bash

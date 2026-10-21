@@ -120,7 +120,8 @@ class AppsRepository(private val context: Context, private val scope: CoroutineS
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
         return pm.queryIntentActivities(intent, 0)
-            .filter { it.activityInfo.packageName != ownPackage }
+            // priority < 0: telas de emergência do sistema (ex.: Settings FallbackHome), não são launchers.
+            .filter { it.activityInfo.packageName != ownPackage && it.priority >= 0 }
             .map {
                 val label = it.loadLabel(pm).toString()
                 AppEntry(ComponentName(it.activityInfo.packageName, it.activityInfo.name), label, SearchText.normalize(label))

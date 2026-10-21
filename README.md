@@ -57,7 +57,13 @@ de `docs/device-info.txt`). Há várias formas de voltar, da mais simples para a
    adb shell pm disable-user --user 0 app.novadrive.launcher   # volta ao original na hora
    adb shell pm enable app.novadrive.launcher                  # desfaz
    ```
-5. **Por ADB, removendo:** `adb uninstall app.novadrive.launcher`.
+5. **Por ADB, trocando o padrão** (verificado no Android 7.0 do emulador):
+   ```bash
+   adb shell cmd package set-home-activity <pacote/activity do launcher original>
+   ```
+   No Android 7 o próprio comando `cmd` pode fechar com erro (SIGSEGV) depois de aplicar a troca. Isso
+   é um bug do shell, não do NovaDrive: confira apertando HOME.
+6. **Por ADB, removendo:** `adb uninstall app.novadrive.launcher`.
 
 Se a central só tiver o NovaDrive e o original como telas iniciais, as opções 4 e 5 fazem o Android
 voltar sozinho ao original.
@@ -120,3 +126,17 @@ docs/                   adb-setup, open-headunit, device-info (gerado)
 |---|---|
 | 0 Descoberta | Script pronto. **Falta rodar na central** |
 | 1 a 5 | Implementadas e compilando, com testes de unidade e lint limpo. Testadas no emulador API 24 (1024x600). **Falta validar no carro** |
+
+### Verificado no emulador Android 7.0 (API 24, 1024x600, 160 dpi)
+
+- O botão HOME abre o NovaDrive quando ele é o padrão; voltar ao Launcher3 com `set-home-activity`
+  e com `disable-user`/`enable` funcionou.
+- A permissão de notificações abre direto no item do NovaDrive; depois de conceder, o cartão funciona.
+- Clima real via HTTPS: o sistema **não tem** a ISRG Root X1 (hash `6187b673` ausente entre as 148 raízes),
+  e mesmo assim o app buscou o Open-Meteo graças à raiz embutida.
+- O Open Headunit v3.5.0 oficial é detectado, e o botão Android Auto o abre. O APK traz bibliotecas
+  `armeabi-v7a`, compatíveis com o T3.
+- O Open Headunit liga o **modo carro** do Android. O HOME continuou no NovaDrive, que também declara
+  `CAR_DOCK` por segurança. Com as barras do sistema maiores, a HOME entra no layout compacto.
+- RAM (PSS) no emulador: cerca de 46 MB. **O tempo de abertura medido no emulador não vale**: sem
+  aceleração (KVM), a CPU é emulada em software. Meça no carro com `scripts/perf.sh`.

@@ -24,6 +24,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -73,22 +75,28 @@ import kotlin.math.roundToInt
 
 private val PtBr = Locale.forLanguageTag("pt-BR")
 
+/** Altura útil pequena (barras do sistema grandes, telas 800x480): layout mais enxuto. */
+private val LocalCompact = staticCompositionLocalOf { false }
+
 @Composable
 fun HomeScreen(vm: LauncherViewModel, actions: LauncherActions, settings: Settings) {
     val onPhoto = settings.wallpaper != WallpaperChoice.NONE
-    Box(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val compact = maxHeight < 520.dp
         Wallpaper(vm.c.wallpaper, settings.wallpaper)
-        Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 14.dp)) {
+        CompositionLocalProvider(LocalCompact provides compact) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = if (compact) 8.dp else 14.dp)) {
             TopBar(vm, actions, onPhoto, vm.c.wallpaper.brandingPresent)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (compact) 6.dp else 10.dp))
             Row(Modifier.weight(1f).fillMaxWidth()) {
-                NowPlayingCard(vm, actions, Modifier.weight(0.37f).fillMaxHeight())
+                NowPlayingCard(vm, actions, Modifier.weight(0.35f).fillMaxHeight())
                 // Centro livre: é onde o HR-V aparece na foto.
-                Spacer(Modifier.weight(0.26f))
-                ShortcutGrid(vm, actions, Modifier.weight(0.37f).fillMaxHeight())
+                Spacer(Modifier.weight(0.30f))
+                ShortcutGrid(vm, actions, Modifier.weight(0.35f).fillMaxHeight())
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(if (compact) 8.dp else 12.dp))
             Dock(vm, actions)
+        }
         }
     }
 }
@@ -128,8 +136,8 @@ private fun Wallpaper(loader: WallpaperLoader, choice: WallpaperChoice) {
             Modifier.fillMaxSize().background(
                 Brush.horizontalGradient(
                     0f to Color.Black.copy(alpha = 0.45f),
-                    0.36f to Color.Transparent,
-                    0.64f to Color.Transparent,
+                    0.34f to Color.Transparent,
+                    0.66f to Color.Transparent,
                     1f to Color.Black.copy(alpha = 0.45f),
                 ),
             ),
@@ -170,7 +178,7 @@ private fun ClockBlock(vm: LauncherViewModel, onPhoto: Boolean, modifier: Modifi
     Column(modifier) {
         Text(
             timeFmt.format(date),
-            style = MaterialTheme.typography.displayMedium.onPhoto(onPhoto),
+            style = (if (LocalCompact.current) MaterialTheme.typography.displaySmall else MaterialTheme.typography.displayMedium).onPhoto(onPhoto),
             color = Color.White,
             maxLines = 1,
         )
@@ -276,13 +284,14 @@ private fun MediaMessage(title: String, body: String, button: String?, onClick: 
 @Composable
 private fun ActiveMedia(np: NowPlaying, vm: LauncherViewModel, actions: LauncherActions) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
+    val compact = LocalCompact.current
+    Column(Modifier.fillMaxSize().padding(if (compact) 12.dp else 16.dp)) {
         Row(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).tap(onClick = actions::openPlayer),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.size(92.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceVariant),
+                Modifier.size(if (LocalCompact.current) 64.dp else 92.dp).clip(RoundedCornerShape(14.dp)).background(cs.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 val art = np.art
@@ -295,7 +304,12 @@ private fun ActiveMedia(np: NowPlaying, vm: LauncherViewModel, actions: Launcher
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(np.appLabel.uppercase(PtBr), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp), color = cs.primary, maxLines = 1)
-                Text(np.title.ifBlank { "Sem título" }, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    np.title.ifBlank { "Sem título" },
+                    style = if (compact) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+                    maxLines = if (compact) 1 else 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 if (np.artist.isNotBlank()) {
                     Text(np.artist, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
@@ -304,7 +318,7 @@ private fun ActiveMedia(np: NowPlaying, vm: LauncherViewModel, actions: Launcher
         Spacer(Modifier.weight(1f))
         if (!LocalReduceMotion.current && np.durationMs > 0) {
             Progress(np)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (compact) 6.dp else 10.dp))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             RoundIconButton(R.drawable.ic_previous, "Anterior", { vm.c.media.previous() }, enabled = np.canPrevious)
@@ -312,7 +326,7 @@ private fun ActiveMedia(np: NowPlaying, vm: LauncherViewModel, actions: Launcher
                 if (np.isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
                 if (np.isPlaying) "Pausar" else "Tocar",
                 { vm.c.media.playPause() },
-                size = 76.dp,
+                size = if (compact) 64.dp else 76.dp,
                 filled = true,
             )
             RoundIconButton(R.drawable.ic_next, "Próxima", { vm.c.media.next() }, enabled = np.canNext)
@@ -356,9 +370,10 @@ private fun fmt(ms: Long): String {
 @Composable
 private fun ShortcutGrid(vm: LauncherViewModel, actions: LauncherActions, modifier: Modifier) {
     val items by vm.shortcuts.collectAsStateWithLifecycle()
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    val gap = if (LocalCompact.current) 8.dp else 10.dp
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(gap)) {
         items.chunked(2).forEach { row ->
-            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 row.forEach { ShortcutTile(it, vm, actions, Modifier.weight(1f).fillMaxHeight()) }
             }
         }
@@ -368,6 +383,7 @@ private fun ShortcutGrid(vm: LauncherViewModel, actions: LauncherActions, modifi
 @Composable
 private fun ShortcutTile(item: ResolvedShortcut, vm: LauncherViewModel, actions: LauncherActions, modifier: Modifier) {
     val app = item.app
+    val compact = LocalCompact.current
     val pick = { vm.openPicker(PickTarget.Shortcut(item.slot)) }
     GlassCard(modifier) {
         Column(
@@ -376,19 +392,19 @@ private fun ShortcutTile(item: ResolvedShortcut, vm: LauncherViewModel, actions:
             verticalArrangement = Arrangement.Center,
         ) {
             if (app != null) {
-                AppIcon(vm.c.apps, app, 44.dp)
+                AppIcon(vm.c.apps, app, if (compact) 32.dp else 44.dp)
             } else {
-                Icon(painterResource(item.slot.icon), null, tint = Color.White.copy(alpha = 0.45f), modifier = Modifier.size(36.dp))
+                Icon(painterResource(item.slot.icon), null, tint = Color.White.copy(alpha = 0.45f), modifier = Modifier.size(if (compact) 26.dp else 36.dp))
             }
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(if (compact) 2.dp else 6.dp))
             Text(
                 if (app != null && !item.automatic) app.label else item.slot.label,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (compact) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = if (app != null) Color.White else Color.White.copy(alpha = 0.55f),
             )
-            if (app == null) Text("Toque para escolher", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
+            if (app == null && !compact) Text("Toque para escolher", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.45f))
         }
     }
 }
@@ -398,27 +414,29 @@ private fun ShortcutTile(item: ResolvedShortcut, vm: LauncherViewModel, actions:
 @Composable
 private fun Dock(vm: LauncherViewModel, actions: LauncherActions) {
     val headunit by vm.headunit.collectAsStateWithLifecycle()
+    val size = if (LocalCompact.current) 64.dp else 72.dp
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        RoundIconButton(R.drawable.ic_apps, "Todos os apps", { vm.open(Screen.Apps) }, size = 72.dp)
+        RoundIconButton(R.drawable.ic_apps, "Todos os apps", { vm.open(Screen.Apps) }, size = size)
         Spacer(Modifier.width(18.dp))
         AndroidAutoButton(
+            height = size,
             subtitle = if (headunit != null) "Conecte o celular no USB" else "Toque para instalar",
             onClick = { headunit?.let(actions::launch) ?: vm.openHeadunitHelp(fromSettings = false) },
             onLongClick = { vm.openHeadunitHelp(fromSettings = false) },
         )
         Spacer(Modifier.width(18.dp))
-        RoundIconButton(R.drawable.ic_settings, "Configurações", { vm.open(Screen.Settings) }, size = 72.dp)
+        RoundIconButton(R.drawable.ic_settings, "Configurações", { vm.open(Screen.Settings) }, size = size)
     }
 }
 
 @Composable
-private fun AndroidAutoButton(subtitle: String, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun AndroidAutoButton(height: androidx.compose.ui.unit.Dp, subtitle: String, onClick: () -> Unit, onLongClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     Row(
         Modifier
             .width(340.dp)
-            .height(72.dp)
-            .clip(RoundedCornerShape(36.dp))
+            .height(height)
+            .clip(RoundedCornerShape(height / 2))
             .background(Brush.horizontalGradient(listOf(cs.primary, cs.primaryContainer)))
             .tap(onLongClick = onLongClick, onClick = onClick)
             .padding(horizontal = 22.dp),

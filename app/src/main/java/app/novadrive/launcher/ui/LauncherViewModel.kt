@@ -141,5 +141,7 @@ class LauncherViewModel(val c: AppContainer) : ViewModel() {
 
     fun onResume() {
         c.media.recheck()
+        // Voltou da tela do sistema com o acesso concedido: segue para a HOME.
+        if (_screen.value == Screen.NotificationAccess && c.media.hasAccess()) goHome()
     }
 }
